@@ -1,0 +1,26 @@
+nohup: ignoring input
+Optimizing ./output/cof_prune_A
+Output folder: ./output/cof_prune_A [17/06 12:38:59]
+feature_dim: 128 [17/06 12:38:59]
+meta data loaded, total image:5100 [17/06 12:39:00]
+meta data loaded, total image:300 [17/06 12:39:00]
+  0%|          | 0/5100 [00:00<?, ?it/s]100%|██████████| 5100/5100 [00:00<00:00, 242883.02it/s]
+0it [00:00, ?it/s]300it [00:00, 98751.47it/s]
+origin points, 36352 [17/06 12:39:01]
+after points, 36352 [17/06 12:39:01]
+Loading Training Cameras [17/06 12:39:01]
+Loading Test Cameras [17/06 12:39:01]
+Loading Video Cameras [17/06 12:39:01]
+Deformation Net Set aabb [ 856.44665527   29.5665741  2485.72387695] [-228.06988525 -134.49047852    6.00915694] [17/06 12:39:01]
+Voxel Plane: set aabb= Parameter containing:
+tensor([[ 856.4467,   29.5666, 2485.7239],
+        [-228.0699, -134.4905,    6.0092]]) [17/06 12:39:01]
+Number of points at initialisation :  36352 [17/06 12:39:01]
+ic| gaussians.get_xyz.shape: torch.Size([122685, 3])
+Training progress:   0%|          | 0/35000 [00:00<?, ?it/s]Traceback (most recent call last):
+  File "prune_finetune.py", line 336, in <module>
+    training(
+  File "prune_finetune.py", line 147, in training
+    viewpoint_cam = viewpoint_stack.pop(randint(0, len(viewpoint_stack) - 1))
+AttributeError: 'FourDGSdataset' object has no attribute 'pop'
+Training progress:   0%|          | 0/35000 [00:00<?, ?it/s]

@@ -6,6 +6,8 @@ from utils.graphics_utils import fov2focal, focal2fov
 import torch
 from utils.camera_utils import loadCam
 from utils.graphics_utils import focal2fov
+import copy
+
 class FourDGSdataset(Dataset):
     def __init__(
         self,
@@ -44,3 +46,5 @@ class FourDGSdataset(Dataset):
     def __len__(self):
         
         return len(self.dataset)
+    def copy(self):
+        return copy.deepcopy(self)  

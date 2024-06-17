@@ -10,3 +10,5 @@ pytorch_msssim
 open3d
 Werkzeug==2.2.3
 imageio-ffmpeg
+plyfile
+icecream

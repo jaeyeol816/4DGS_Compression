@@ -22,7 +22,7 @@ import uuid
 from tqdm import tqdm
 from utils.image_utils import psnr
 from argparse import ArgumentParser, Namespace
-from arguments import ModelParams, PipelineParams, OptimizationParams
+from arguments import ModelParams, PipelineParams, OptimizationParams, ModelHiddenParams
 import numpy as np
 
 try:
@@ -54,6 +54,7 @@ mse2psnr = lambda x: -10.0 * torch.log(x) / torch.log(to_tensor([10.0]))
 
 def training(
     dataset,
+	hyper,
     opt,
     pipe,
     testing_iterations,
@@ -65,7 +66,7 @@ def training(
 ):
     first_iter = 0
     tb_writer = prepare_output_and_logger(dataset)
-    gaussians = GaussianModel(dataset.sh_degree)
+    gaussians = GaussianModel(dataset.sh_degree, hyper)
     scene = Scene(dataset, gaussians)
     if checkpoint:
         gaussians.training_setup(opt)
@@ -295,6 +296,7 @@ if __name__ == "__main__":
     lp = ModelParams(parser)
     op = OptimizationParams(parser)
     pp = PipelineParams(parser)
+    hp = ModelHiddenParams(parser)
     parser.add_argument("--ip", type=str, default="127.0.0.1")
     parser.add_argument("--port", type=int, default=6009)
     parser.add_argument("--debug_from", type=int, default=-1)
@@ -333,6 +335,7 @@ if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
     training(
         lp.extract(args),
+        hp.extract(args),
         op.extract(args),
         pp.extract(args),
         args.test_iterations,
