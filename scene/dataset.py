@@ -7,6 +7,7 @@ import torch
 from utils.camera_utils import loadCam
 from utils.graphics_utils import focal2fov
 import copy
+import random
 
 class FourDGSdataset(Dataset):
     def __init__(
@@ -44,7 +45,11 @@ class FourDGSdataset(Dataset):
         else:
             return self.dataset[index]
     def __len__(self):
-        
         return len(self.dataset)
+    def get_random_item(self):
+        random_index = random.randint(0, len(self.dataset) - 1)
+        return self[random_index]
     def copy(self):
-        return copy.deepcopy(self)  
+        new_fourdgs_dataset = FourDGSdataset(self.dataset, self.args, self.dataset_type)
+        return new_fourdgs_dataset
+    

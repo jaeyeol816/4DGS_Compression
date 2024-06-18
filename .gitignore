@@ -9,3 +9,9 @@ screenshots
 data/
 data
 submodules/
+logs
+logs/
+input
+input/
+output
+output/

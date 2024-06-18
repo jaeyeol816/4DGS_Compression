@@ -41,6 +41,7 @@ import torchvision
 from torch.optim.lr_scheduler import ExponentialLR
 import csv
 from utils.logger_utils import training_report, prepare_output_and_logger
+from typing import NamedTuple
 
 
 to_tensor = (
@@ -50,6 +51,18 @@ to_tensor = (
 )
 img2mse = lambda x, y: torch.mean((x - y) ** 2)
 mse2psnr = lambda x: -10.0 * torch.log(x) / torch.log(to_tensor([10.0]))
+
+class CameraInfo(NamedTuple):
+    uid: int
+    R: np.array
+    T: np.array
+    FovY: np.array
+    FovX: np.array
+    image: np.array
+    image_path: str
+    image_name: str
+    width: int
+    height: int
 
 
 def training(
@@ -142,9 +155,13 @@ def training(
             gaussians.scheduler.step()
 
         # Pick a random Camera
-        if not viewpoint_stack:
-            viewpoint_stack = scene.getTrainCameras().copy()
-        viewpoint_cam = viewpoint_stack.pop(randint(0, len(viewpoint_stack) - 1))
+        # if not viewpoint_stack:
+        #     viewpoint_stack = scene.getTrainCamera2().copy()
+        # viewpoint_cam = viewpoint_stack.pop(randint(0, len(viewpoint_stack) - 1))
+        
+        views = scene.getTrainCameras().copy()		# 
+        viewpoint_cam = views.get_random_item()
+        
 
         # Render
         if (iteration - 1) == debug_from:

@@ -92,6 +92,10 @@ class Scene:
                                                    ))
         else:
             self.gaussians.create_from_pcd(scene_info.point_cloud, self.cameras_extent, self.maxtime)
+        
+        # for resolution_scale in resolution_scales:
+        #     self.train_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.train_cameras, resolution_scale, args)
+        #     print(f'<추가한 코드> Scene객체의 self.train_cameras[scale]의 길이: {len(self.train_cameras[resolution_scale])}')
 
     def save(self, iteration, stage):
         if stage == "coarse":
@@ -108,3 +112,6 @@ class Scene:
         return self.test_camera
     def getVideoCameras(self, scale=1.0):
         return self.video_camera
+    
+    # def getTrainCameras2(self, scale=1.0):
+    #     return self.train_cameras[scale]

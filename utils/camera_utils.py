@@ -34,6 +34,7 @@ def loadCam(args, id, cam_info, resolution_scale):
                   time = cam_info.time,
 )
 
+
 def cameraList_from_camInfos(cam_infos, resolution_scale, args):
     camera_list = []
 
