@@ -159,7 +159,7 @@ def training(
         #     viewpoint_stack = scene.getTrainCamera2().copy()
         # viewpoint_cam = viewpoint_stack.pop(randint(0, len(viewpoint_stack) - 1))
         
-        views = scene.getTrainCameras().copy()		# 
+        views = scene.getTrainCameras().copy()		# fourDGSDataset 자료형
         viewpoint_cam = views.get_random_item()
         
 
