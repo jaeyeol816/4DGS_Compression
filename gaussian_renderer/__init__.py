@@ -54,20 +54,20 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     else:
         raster_settings_temp = viewpoint_camera['camera']
         raster_settings = GaussianRasterizationSettings(
-			image_height=int(raster_settings_temp.image_height),
-			image_width = int(raster_settings_temp.image_width),
-			tanfovx=raster_settings_temp.tanfovx,
-			tanfovy=raster_settings_temp.tanfovy,
-			bg=raster_settings_temp.bg,
-			scale_modifier=raster_settings_temp.scaling_modifier,
-			viewmatrix=raster_settings_temp.viewmatrix,
-			projmatrix=raster_settings_temp.projmatrix,
-			sh_degree=raster_settings_temp.sh_degree,
-			campos=raster_settings_temp.campos,
-			prefiltered=raster_settings_temp.prefiltered,
-			debug=raster_settings_temp.debug,
-			f_count=False,
-		)
+            image_height=int(raster_settings_temp.image_height),
+            image_width = int(raster_settings_temp.image_width),
+            tanfovx=raster_settings_temp.tanfovx,
+            tanfovy=raster_settings_temp.tanfovy,
+            bg=raster_settings_temp.bg,
+            scale_modifier=raster_settings_temp.scaling_modifier,
+            viewmatrix=raster_settings_temp.viewmatrix,
+            projmatrix=raster_settings_temp.projmatrix,
+            sh_degree=raster_settings_temp.sh_degree,
+            campos=raster_settings_temp.campos,
+            prefiltered=raster_settings_temp.prefiltered,
+            debug=raster_settings_temp.debug,
+            f_count=False,
+        )
         time=torch.tensor(viewpoint_camera['time']).to(means3D.device).repeat(means3D.shape[0],1)
         
 
@@ -178,9 +178,10 @@ def count_render(
         pass
 
     # Set up rasterization configuration
+    means3D = pc.get_xyz
+    
     tanfovx = math.tan(viewpoint_camera.FoVx * 0.5)
     tanfovy = math.tan(viewpoint_camera.FoVy * 0.5)
-
     raster_settings = GaussianRasterizationSettings(
         image_height=int(viewpoint_camera.image_height),
         image_width=int(viewpoint_camera.image_width),
@@ -188,19 +189,21 @@ def count_render(
         tanfovy=tanfovy,
         bg=bg_color,
         scale_modifier=scaling_modifier,
-        viewmatrix=viewpoint_camera.world_view_transform,
-        projmatrix=viewpoint_camera.full_proj_transform,
+        viewmatrix=viewpoint_camera.world_view_transform.cuda(),
+        projmatrix=viewpoint_camera.full_proj_transform.cuda(),
         sh_degree=pc.active_sh_degree,
-        campos=viewpoint_camera.camera_center,
+        campos=viewpoint_camera.camera_center.cuda(),
         prefiltered=False,
         debug=pipe.debug,
-        f_count=True,
+        f_count=True
     )
+    time = torch.tensor(viewpoint_camera.time).to(means3D.device).repeat(means3D.shape[0],1)
 
     rasterizer = GaussianRasterizer(raster_settings=raster_settings)
     means3D = pc.get_xyz
     means2D = screenspace_points
-    opacity = pc.get_opacity
+    opacity = pc._opacity
+    shs = pc.get_features
 
     # If precomputed 3d covariance is provided, use it. If not, then it will be computed from
     # scaling / rotation by the rasterizer.
@@ -210,30 +213,36 @@ def count_render(
     if pipe.compute_cov3D_python:
         cov3D_precomp = pc.get_covariance(scaling_modifier)
     else:
-        scales = pc.get_scaling
-        rotations = pc.get_rotation
-
+        scales = pc._scaling
+        rotations = pc._rotation
+    deformation_point = pc._deformation_table
+    means3D_final, scales_final, rotations_final, opacity_final, shs_final = pc._deformation(means3D, scales, 
+                                                                 rotations, opacity, shs,
+                                                                 time)
+    
+    scales_final = pc.scaling_activation(scales_final)
+    rotations_final = pc.rotation_activation(rotations_final)
+    opacity = pc.opacity_activation(opacity_final)
+    # print(opacity.max())
     # If precomputed colors are provided, use them. Otherwise, if it is desired to precompute colors
     # from SHs in Python, do it. If not, then SH -> RGB conversion will be done by rasterizer.
-    shs = None
+    # shs = None
     colors_precomp = None
     if override_color is None:
         if pipe.convert_SHs_python:
-            shs_view = pc.get_features.transpose(1, 2).view(
-                -1, 3, (pc.max_sh_degree + 1) ** 2
-            )
-            dir_pp = pc.get_xyz - viewpoint_camera.camera_center.repeat(
-                pc.get_features.shape[0], 1
-            )
-            dir_pp_normalized = dir_pp / dir_pp.norm(dim=1, keepdim=True)
+            shs_view = pc.get_features.transpose(1, 2).view(-1, 3, (pc.max_sh_degree+1)**2)
+            dir_pp = (pc.get_xyz - viewpoint_camera.camera_center.cuda().repeat(pc.get_features.shape[0], 1))
+            dir_pp_normalized = dir_pp/dir_pp.norm(dim=1, keepdim=True)
             sh2rgb = eval_sh(pc.active_sh_degree, shs_view, dir_pp_normalized)
             colors_precomp = torch.clamp_min(sh2rgb + 0.5, 0.0)
         else:
-            shs = pc.get_features
+            pass
+            # shs = 
     else:
         colors_precomp = override_color
 
     # Rasterize visible Gaussians to image, obtain their radii (on screen).
+    # print('temp: rasterizer (gaussian_renderer/__init__.py)') # 임시코드
     gaussians_count, important_score, rendered_image, radii = rasterizer(
         means3D=means3D,
         means2D=means2D,

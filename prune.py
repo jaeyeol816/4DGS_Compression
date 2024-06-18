@@ -135,6 +135,7 @@ def prune_list(gaussians, scene, pipe, background):
     gaussian_list, imp_list = None, None
     viewpoint_cam = viewpoint_stack.get_random_item()
     # viewpoint_cam = viewpoint_stack.pop()
+    print('temp: called count_render (prune.py)') # 임시코드
     render_pkg = count_render(viewpoint_cam, gaussians, pipe, background)
     gaussian_list, imp_list = (
         render_pkg["gaussians_count"],
